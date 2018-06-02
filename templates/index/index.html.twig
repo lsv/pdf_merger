@@ -1,0 +1,74 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}PDF Merger{% endblock %}
+
+{% import _self as cp %}
+
+{% macro createprototype(form) %}
+    <div class="flex">
+        <div class="flex-fullwidth">
+            {{ form_widget(form) }}
+        </div>
+        <div class="flex-right ml-1">
+            <a class="removeFile btn btn-danger"><i class="material-icons">delete_forever</i></a>
+        </div>
+    </div>
+{% endmacro %}
+
+{% block body %}
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-header"><h1>Merge PDF files</h1></div>
+            <div class="card-body">
+                {{ form_errors(form) }}
+                {{ form_start(form) }}
+
+                <ul id="files-list" class="list-unstyled"
+                    data-prototype="{{ cp.createprototype(form.files.vars.prototype)|e }}"
+                    data-widget-tags="{{ '<li></li>'|e }}">
+                    {% for file in form.files %}
+                        <li>
+                            {{ form_errors(file) }}
+                            {{ form_widget(file) }}
+                        </li>
+                    {% endfor %}
+                </ul>
+
+                <div class="form-group">
+                    <a class="addfile btn btn-info" data-list="#files-list">Add another PDF file</a>
+                </div>
+
+                {% do form.files.setRendered %}
+                {{ form_rest(form) }}
+                <button type="submit" class="btn btn-primary">Merge files</button>
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        jQuery(document).on('change', '.file-upload', function() {
+            $(this).parent().find('label').text($(this).val().replace('C:\\fakepath\\', ''));
+        });
+
+        jQuery(document).on('click', '.removeFile', function(e) {
+            e.preventDefault();
+            $(this).closest('li').remove();
+        });
+
+        jQuery('.addfile').click(function (e) {
+            e.preventDefault();
+            let list = jQuery(jQuery(this).attr('data-list'));
+            let counter = list.data('widget-counter') | list.children().length;
+            if (!counter) { counter = list.children().length; }
+            let newWidget = list.attr('data-prototype');
+            newWidget = newWidget.replace(/__name__/g, counter);
+            counter++;
+            list.data(' widget-counter', counter);
+            let newElem = jQuery(list.attr('data-widget-tags')).html(newWidget);
+            newElem.appendTo(list);
+        });
+    </script>
+{% endblock %}
